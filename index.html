@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Operación: Colegio Limpio - Denzil Escolar</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;padding:0;width:100vw;height:100vh;height:100dvh;overflow:hidden;background:#091418;color:#fff;font-family:'Courier New',Courier,monospace,sans-serif;touch-action:none}
+#gameScreen{position:relative;width:100vw;height:100vh;height:100dvh;display:flex;align-items:center;justify-content:center;background:#091418}
+canvas{display:block;width:100vw;height:100vh;height:100dvh;object-fit:contain;image-rendering:pixelated;image-rendering:crisp-edges;background:#2d5a27}
+#topBar{position:absolute;top:calc(env(safe-area-inset-top) + 10px);left:0;right:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:5}
+.schoolLogoOnly{position:absolute;left:calc(env(safe-area-inset-left) + 15px);top:0;width:44px;height:44px;object-fit:contain;border-radius:50%;background:#fff;border:3px solid #7bf035;box-shadow:0 4px 0 #000;pointer-events:auto}
+#timeBox{background:#122229e6;border:3px solid #7bf035;border-radius:8px;padding:6px 18px;font-weight:bold;font-size:clamp(14px,2.3vw,19px);color:#fff;box-shadow:0 4px 0 #000;text-shadow:2px 2px 0 #000;pointer-events:auto}
+#timeBox.critical{border-color:#ef4444;animation:pulseTime 0.6s infinite alternate}
+@keyframes pulseTime{0%{transform:scale(1);color:#fff}100%{transform:scale(1.05);color:#ef4444}}
+
+#menuButton{position:absolute;right:calc(env(safe-area-inset-right) + 15px);top:0;z-index:7;width:46px;height:46px;padding:0;background:#122229e6;color:#7bf035;border:3px solid #7bf035;border-radius:8px;font-size:22px;box-shadow:0 4px 0 #000;cursor:pointer;pointer-events:auto;touch-action:manipulation}
+#menuButton:active{transform:translateY(2px);box-shadow:0 2px 0 #000}
+
+#skillsHUD{position:absolute;left:calc(env(safe-area-inset-left) + 68px);top:3px;background:rgba(18,34,41,.88);border:2px solid #7bf035;border-radius:8px;padding:4px 8px;font-size:12px;z-index:5;pointer-events:none;box-shadow:0 4px 0 #000;display:flex;gap:5px;align-items:center}
+.skillIconBadge{background:rgba(0,0,0,.4);border:1px solid #7bf035;border-radius:6px;padding:2px 5px;font-size:12px;display:flex;align-items:center;gap:3px;color:#fff;font-weight:bold}
+.skillIconBadge span{font-size:10px;color:#7bf035}
+
+#mobileControls{position:absolute;inset:0;display:none;justify-content:space-between;align-items:flex-end;padding:calc(env(safe-area-inset-top) + 10px) calc(env(safe-area-inset-right) + 15px) calc(env(safe-area-inset-bottom) + 15px) calc(env(safe-area-inset-left) + 15px);z-index:6;pointer-events:none}
+.playerControls{display:flex;align-items:flex-end;gap:15px;pointer-events:auto}
+.joystick{width:110px;height:110px;border-radius:50%;background:rgba(18,34,41,.75);border:3px solid rgba(255,255,255,.6);position:relative;touch-action:none}
+.knob{position:absolute;width:44px;height:44px;border-radius:50%;background:#7bf035;border:3px solid #fff;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;box-shadow:0 2px 0 #000}
+#overlay,#menuOverlay{position:fixed;inset:0;background:rgba(9,20,24,.94);display:flex;align-items:center;justify-content:center;padding:15px;z-index:20;pointer-events:auto;transition:opacity 0.2s ease}
+#menuOverlay{z-index:25}
+.panel{background:#122229;color:#fff;border:4px solid #7bf035;border-radius:14px;padding:22px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;text-align:center;box-shadow:0 8px 0 #000;pointer-events:auto}
+.panel img.logo{width:70px;height:70px;object-fit:contain;margin-bottom:5px;border-radius:50%;background:#fff;padding:3px;border:2px solid #7bf035}
+.panel h1{color:#7bf035;font-size:clamp(18px,3.8vw,24px);margin:6px 0;text-shadow:2px 2px 0 #000;letter-spacing:1px}
+.panel h2.subtitle{font-size:12px;color:#93c5fd;margin-bottom:10px;text-transform:uppercase}
+
+.diffSelector{display:flex;gap:8px;justify-content:center;margin:8px 0}
+.diffBtn{flex:1;padding:8px 4px!important;font-size:12px!important;background:#1e3a8a!important;border-color:#60a5fa!important;margin:0!important;cursor:pointer;touch-action:manipulation}
+.diffBtn.active{background:#7bf035!important;color:#091418!important;border-color:#fff!important}
+
+.panel button{display:block;width:100%;margin:8px 0;background:#27ae60;color:#fff;border:3px solid #fff;border-radius:8px;padding:12px;font-size:15px;font-weight:bold;font-family:inherit;cursor:pointer;box-shadow:0 4px 0 #000;touch-action:manipulation}
+.panel button:active{transform:translateY(3px);box-shadow:0 1px 0 #000}
+.panel button.bigPlay{background:#10b981;font-size:19px;padding:16px;border-color:#fef08a;box-shadow:0 6px 0 #000}
+.panel button.bigPlay:active{transform:translateY(3px);box-shadow:0 3px 0 #000}
+.panel button.secondary{background:#1d4ed8}
+.panel button.accent{background:#d97706}
+.panel button.skill{background:#00d2d3;color:#091418;border-color:#fff;text-align:left;font-size:13px;padding:10px;cursor:pointer;touch-action:manipulation}
+
+.achievementItem{background:rgba(0,0,0,0.3);border:2px solid #374151;border-radius:8px;padding:8px 12px;margin:6px 0;text-align:left;display:flex;align-items:center;gap:10px}
+.achievementItem.unlocked{border-color:#7bf035;background:rgba(123,240,53,0.1)}
+.skinSelector{display:flex;gap:8px;justify-content:center;margin:8px 0}
+.skinBtn{flex:1;padding:8px 4px!important;font-size:11px!important;background:#334155!important;border-color:#64748b!important;margin:0!important}
+.skinBtn.active{background:#7bf035!important;color:#091418!important;border-color:#fff!important}
+.previewCanvasContainer{background:rgba(0,0,0,0.4);border:2px solid #374151;border-radius:10px;padding:8px;margin:10px auto;width:130px;height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.guideBox{background:rgba(0,0,0,0.35);border:2px solid #334155;border-radius:8px;padding:10px 14px;margin:8px 0;text-align:left;font-size:12px;line-height:1.45}
+.wikiTabs{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:8px 0}
+.wikiTabBtn{padding:8px 6px!important;font-size:11px!important;margin:0!important;background:#1e293b!important;border-color:#64748b!important}
+.wikiTabBtn.active{background:#7bf035!important;color:#091418!important;border-color:#fff!important}
+.changelogItem{border-bottom:1px solid #334155;padding:8px 0}
+.changelogItem:last-child{border-bottom:none}
+.small{font-size:12px;color:#8a9ba8;margin-top:8px}
+.hidden{display:none!important}
+#orientationWarning{position:fixed;inset:0;background:#091418;color:#7bf035;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:100;text-align:center;padding:20px}
+#orientationWarning .icon{font-size:60px;margin-bottom:15px;animation:rotateAnim 2s infinite ease-in-out}
+@keyframes rotateAnim{0%,10%{transform:rotate(0deg)}50%,60%{transform:rotate(-90deg)}100%{transform:rotate(0deg)}}
+@media (pointer:coarse),(max-width:900px){#mobileControls{display:flex}}
+@media (orientation:portrait) and (pointer:coarse){#orientationWarning{display:flex}}
+</style>
+</head>
+<body>
+
+<div id="orientationWarning">
+  <div class="icon">📱🔄</div>
+  <h2>POR FAVOR, GIRA TU DISPOSITIVO</h2>
+  <p style="color:#fff;">Juega en modo horizontal para una mejor experiencia.</p>
+</div>
+
+<div id="gameScreen">
+  <canvas id="game" width="850" height="540"></canvas>
+
+  <div id="topBar">
+    <img src="https://pqrsd.denzilescolar.edu.co/uploads/images/c3e0f-descarga-removebg-preview.png" class="schoolLogoOnly" alt="Logo Denzil Escolar">
+    
+    <div id="skillsHUD">
+      <div class="skillIconBadge" title="Mochila">🎒<span id="badgeBackpack">1</span></div>
+      <div class="skillIconBadge" title="Alcance Guantes">🧤<span id="badgeRange">1</span></div>
+      <div class="skillIconBadge hidden" id="badgeShieldContainer" title="Escudos">🛡️<span id="badgeShield">0</span></div>
+      <div class="skillIconBadge hidden" id="badgeSpeedContainer" title="Botas / Impulso">👟</div>
+    </div>
+
+    <div id="timeBox">⏱️ <span id="time">75</span>s | Nivel <span id="levelNum">1</span></div>
+    <button id="menuButton" aria-label="Menú">⚙️</button>
+  </div>
+
+  <div id="mobileControls">
+    <div class="playerControls" id="playerOneControls">
+      <div class="joystick" id="joy1"><div class="knob"></div></div>
+    </div>
+    <div class="playerControls hidden" id="playerTwoControls">
+      <div class="joystick" id="joy2"><div class="knob"></div></div>
+    </div>
+  </div>
+</div>
+
+<div id="overlay">
+  <div class="panel" id="panel">
+    <img src="https://pqrsd.denzilescolar.edu.co/uploads/images/c3e0f-descarga-removebg-preview.png" class="logo" alt="Escudo">
+    <h1>OPERACIÓN: COLEGIO LIMPIO</h1>
+    <h2 class="subtitle">Inst. Educativa Denzil Escolar • Sede Mega Colegio</h2>
+    <p style="font-size:12px;color:#facc15;margin-bottom:6px;">🏆 Récord Máximo: <span id="highScoreDisplay">0</span> pts</p>
+    
+    <button class="bigPlay" id="mainPlayBtn">🎮 JUGAR</button>
+    <button id="skinsMenuBtn" class="accent">👕 PERSONALIZAR UNIFORME</button>
+    <button id="guideMenuBtn" class="secondary">📖 GUÍA, WIKI Y ACTUALIZACIONES</button>
+    <button id="achievementsMenuBtn" style="background:#334155">🏆 LOGROS Y TROFEOS</button>
+  </div>
+</div>
+
+<div id="menuOverlay" class="hidden">
+  <div class="panel">
+    <h1>⚙️ PAUSA</h1>
+    <p>Juego en pausa</p>
+    <button id="resumeButton">▶ CONTINUAR</button>
+    <button id="restartButton">🔄 REINICIAR NIVEL</button>
+    <button id="homeButton" class="secondary">⌂ MENÚ PRINCIPAL</button>
+    <p class="small">💻 Controles PC: Jugador 1 (WASD) | Jugador 2 (Flechas)</p>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+ctx.imageSmoothingEnabled=false;
+
+const overlay=document.getElementById("overlay");
+const panel=document.getElementById("panel");
+const menuOverlay=document.getElementById("menuOverlay");
+
+let audioCtx=null;
+let musicTimer=null;
+
+function initAudio(){
+  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==="suspended") audioCtx.resume();
+}
+
+const melodyNotes=[261.63,293.66,329.63,349.23,392,440,493.88,523.25,440,392,329.63,293.66];
+let noteIndex=0;
+
+function startBackgroundMusic(){
+  if(musicTimer) return;
+  musicTimer=setInterval(()=>{
+    if(!audioCtx) return;
+    try{
+      const osc=audioCtx.createOscillator();
+      const gain=audioCtx.createGain();
+      osc.type="triangle";
+      osc.frequency.setValueAtTime(melodyNotes[noteIndex],audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.012,audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0005,audioCtx.currentTime+0.42);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime+0.42);
+      noteIndex=(noteIndex+1)%melodyNotes.length;
+    }catch(e){}
+  },450);
+}
+
+function playClickSound(){
+  try{
+    initAudio();
+    if(!audioCtx) return;
+    const osc=audioCtx.createOscillator();
+    const gain=audioCtx.createGain();
+    osc.type="sine";
+    const now=audioCtx.currentTime;
+    osc.frequency.setValueAtTime(500,now);
+    osc.frequency.exponentialRampToValueAtTime(800,now+0.08);
+    gain.gain.setValueAtTime(0.25,now);
+    gain.gain.exponentialRampToValueAtTime(0.01,now+0.08);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now+0.08);
+  }catch(e){}
+}
+
+function playSound(type){
+  try{
+    initAudio();
+    if(!audioCtx) return;
+    const osc=audioCtx.createOscillator();
+    const gain=audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    const now=audioCtx.currentTime;
+
+    if(type==="pickup"||type==="bossHit"){
+      osc.type="triangle";
+      osc.frequency.setValueAtTime(type==="bossHit"?650:400,now);
+      osc.frequency.exponentialRampToValueAtTime(type==="bossHit"?250:800,now+0.1);
+      gain.gain.setValueAtTime(0.18,now);
+      gain.gain.exponentialRampToValueAtTime(0.01,now+0.1);
+      osc.start(now);
+      osc.stop(now+0.1);
+    }else if(type==="bin"){
+      osc.type="sine";
+      osc.frequency.setValueAtTime(300,now);
+      osc.frequency.setValueAtTime(600,now+0.1);
+      gain.gain.setValueAtTime(0.22,now);
+      gain.gain.exponentialRampToValueAtTime(0.01,now+0.25);
+      osc.start(now);
+      osc.stop(now+0.25);
+    }else if(type==="shield"||type==="bossDefeat"){
+      osc.type="sawtooth";
+      osc.frequency.setValueAtTime(type==="bossDefeat"?300:200,now);
+      osc.frequency.linearRampToValueAtTime(type==="bossDefeat"?900:500,now+0.2);
+      gain.gain.setValueAtTime(0.22,now);
+      gain.gain.exponentialRampToValueAtTime(0.01,now+0.2);
+      osc.start(now);
+      osc.stop(now+0.2);
+    }else if(type==="powerup"){
+      osc.type="sine";
+      osc.frequency.setValueAtTime(400,now);
+      osc.frequency.exponentialRampToValueAtTime(880,now+0.2);
+      gain.gain.setValueAtTime(0.25,now);
+      gain.gain.exponentialRampToValueAtTime(0.01,now+0.2);
+      osc.start(now);
+      osc.stop(now+0.2);
+    }else if(type==="hit"){
+      osc.type="square";
+      osc.frequency.setValueAtTime(120,now);
+      osc.frequency.linearRampToValueAtTime(40,now+0.3);
+      gain.gain.setValueAtTime(0.25,now);
+      gain.gain.exponentialRampToValueAtTime(0.01,now+0.3);
+      osc.start(now);
+      osc.stop(now+0.3);
+    }
+  }catch(e){}
+}
+
+let paused=false;
+let selectedDifficulty="normal";
+let level=0,score=0,time=75,speed=2.8,reach=34,shieldCharges=0;
+let backpackCapacity=1,backpackLevel=1,rangeLevel=1,gameMode="solo";
+let highScore=0;
+let totalCollectedThisGame=0;
+let players=[],items=[],enemies=[],particles=[];
+let hasSpeedBoost=false;
+let started=false,finished=false;
+let keys={};
+let elapsed=0,last=0,spawnElapsed=0,spawnInterval=4500;
+let globalAnim=0;
+const joystickState=[{x:0,y:0},{x:0,y:0}];
+
+const binCorners=[
+  {x:80, y:470},
+  {x:770, y:470},
+  {x:80, y:145},
+  {x:770, y:145}
+];
+let currentBinPos=binCorners[0];
+let p1Bin=binCorners[0];
+let p2Bin=binCorners[1];
+let p1Score=0, p2Score=0;
+
+let currentSkin="azulDenzil";
+const skins={
+  azulDenzil:{name:"Azul Denzil", color:"#1d4ed8", accent:"#93c5fd", desc:"Uniforme azul tradicional institucional"},
+  grisDenzil:{name:"Educación Física (Gris)", color:"#475569", accent:"#cbd5e1", desc:"Uniforme de educación física"},
+  promo11:{name:"✨ Promo 11° (Amarillo)", color:"#eab308", accent:"#fef08a", desc:"¡Edición especial amarilla de la Promoción de 11°!"}
+};
+
+const changelogs=[
+  {ver:"v3.0 (Final)", desc:"📚 Mini-tutorial con controles y uso visible en pantalla, guía completa de qué trata el juego y Wiki interna de enemigos, mecánicas, mapas y mejoras."},
+  {ver:"v2.9", desc:"⚡ Modo PvP (Competitivo 1v1), transiciones de menús fluidas y eliminación de combos/estrellas."},
+  {ver:"v2.8", desc:"⭐ Calificación por estrellas y resumen detallado."},
+  {ver:"v2.7", desc:"🎵 Sonidos avanzados de Power-ups y combos."},
+  {ver:"v2.6", desc:"🌟 Récord de Puntaje Local y nuevos enemigos especializados."}
+];
+
+let achievements={
+  firstClean:{title:"🧹 Eco-Guerrero", desc:"Termina tu primer nivel", unlocked:false},
+  speedRun:{title:"⚡ Limpieza Relámpago", desc:"Termina un nivel con más de 30s restantes", unlocked:false},
+  bossSlayer:{title:"🛡️ Cazador de Jefes", desc:"Derrota al Rey de la Basura", unlocked:false},
+  coopHero:{title:"👥 Trabajo en Equipo", desc:"Juega y supera un nivel en modo Co-op / PvP", unlocked:false}
+};
+
+let activeTutorialMsg=null;
+let tutorialTimer=0;
+
+let activePowerUp=null;
+let frozenEnemies=0;
+let magnetTime=0;
+let invincibleTime=0;
+let powerUpSpawnElapsed=0;
+let nextPowerUpSpawn=15000;
+
+let boss=null;
+let bossDefeated=true;
+let bossIntroTime=0;
+let bossDamageFlash=0;
+let bossMessageTime=0;
+
+const configs=[
+  {n:5,t:75,es:0.82}, {n:7,t:70,es:0.90}, {n:9,t:68,es:0.98}, {n:11,t:64,es:1.08}, {n:13,t:60,es:1.18},
+  {n:15,t:56,es:1.28}, {n:17,t:53,es:1.38}, {n:19,t:50,es:1.48}, {n:21,t:47,es:1.58}, {n:25,t:45,es:1.68}
+];
+
+const places=[
+  [120,150],[250,140],[600,150],[740,190],[160,290],
+  [340,390],[550,300],[740,420],[420,160],[130,390],
+  [650,480],[280,240],[510,210],[770,310],[380,480],
+  [570,130],[210,460],[460,440],[690,240],[140,220],
+  [330,170],[520,460],[780,480],[250,350],[620,350]
+];
+
+const enemyPlaces=[
+  [780,120],[150,250],[780,400],[430,120],
+  [250,450],[700,480],[400,130],[800,300]
+];
+
+const skills=[
+  {id:"speed",name:"👟 BOTAS VELOCES",desc:()=>"+18% Velocidad de movimiento",apply:()=>{speed*=1.18;hasSpeedBoost=true;}},
+  {id:"backpack",name:"🎒 SUPER MOCHILA",desc:()=>"Capacidad Nivel "+(backpackLevel+1)+": Carga "+(backpackCapacity+1)+" residuos",available:()=>backpackLevel<5,apply:()=>{backpackLevel++;backpackCapacity++;}},
+  {id:"range",name:"🧤 GUANTES ECO",desc:()=>"Alcance Nivel "+(rangeLevel+1)+": Mayor alcance para recoger",available:()=>rangeLevel<5,apply:()=>{rangeLevel++;reach+=20;}},
+  {id:"shield",name:"🛡️ CAMPO DE FUERZA",desc:()=>"Protección contra 1 impacto enemigo",apply:()=>{shieldCharges++;}},
+  {id:"recycle",name:"♻️ IMPULSO ECO",desc:()=>"+10% Velocidad adicional",apply:()=>{speed*=1.1;hasSpeedBoost=true;}}
+];
+
+function loadUserData(){
+  try{
+    const savedAch=localStorage.getItem("denzil_achievements");
+    if(savedAch){
+      const parsed=JSON.parse(savedAch);
+      for(let k in parsed) if(achievements[k]) achievements[k].unlocked=parsed[k];
+    }
+    const savedSkin=localStorage.getItem("denzil_skin");
+    if(savedSkin) currentSkin=savedSkin;
+
+    const savedHs=localStorage.getItem("denzil_highscore");
+    if(savedHs) highScore=parseInt(savedHs,10)||0;
+  }catch(e){}
+}
+
+function saveUserData(){
+  try{
+    const achState={};
+    for(let k in achievements) achState[k]=achievements[k].unlocked;
+    localStorage.setItem("denzil_achievements",JSON.stringify(achState));
+    localStorage.setItem("denzil_skin",currentSkin);
+    localStorage.setItem("denzil_highscore",highScore);
+  }catch(e){}
+}
+
+loadUserData();
+startBackgroundMusic();
+
+function setDifficulty(diff){
+  playClickSound();
+  selectedDifficulty=diff;
+  document.querySelectorAll(".diffBtn").forEach(b=>b.classList.remove("active"));
+  if(diff==="easy") document.getElementById("diffEasy").classList.add("active");
+  if(diff==="normal") document.getElementById("diffNormal").classList.add("active");
+  if(diff==="hard") document.getElementById("diffHard").classList.add("active");
+}
+
+function resetJoystick(index){
+  joystickState[index]={x:0,y:0};
+  const joy=document.getElementById(index===0?"joy1":"joy2");
+  if(joy){
+    const knob=joy.querySelector(".knob");
+    knob.style.left="50%";
+    knob.style.top="50%";
+  }
+}
+
+function setupJoystick(id,index){
+  const joy=document.getElementById(id);
+  const knob=joy.querySelector(".knob");
+  let pointer=null;
+
+  function update(e){
+    const rect=joy.getBoundingClientRect();
+    const cx=rect.left+rect.width/2;
+    const cy=rect.top+rect.height/2;
+    let x=e.clientX-cx;
+    let y=e.clientY-cy;
+    const max=rect.width*0.35;
+    const dist=Math.hypot(x,y);
+    if(dist>max){x=x/dist*max;y=y/dist*max;}
+    joystickState[index].x=x/max;
+    joystickState[index].y=y/max;
+    knob.style.left=`calc(50% + ${x}px)`;
+    knob.style.top=`calc(50% + ${y}px)`;
+  }
+
+  joy.addEventListener("pointerdown",e=>{
+    e.preventDefault();
+    if(pointer!==null) return;
+    pointer=e.pointerId;
+    joy.setPointerCapture(e.pointerId);
+    update(e);
+  });
+  joy.addEventListener("pointermove",e=>{if(e.pointerId===pointer) update(e);});
+  const release=e=>{
+    if(e.pointerId===pointer){pointer=null;resetJoystick(index);}
+  };
+  joy.addEventListener("pointerup",release);
+  joy.addEventListener("pointercancel",release);
+}
+setupJoystick("joy1",0);
+setupJoystick("joy2",1);
+
+function drawPixelRect(x,y,w,h,color){
+  ctx.fillStyle=color;
+  ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));
+}
+
+function drawPixelBin(x,y,highlight,customColor="#27ae60", label=""){
+  drawPixelRect(x-24,y+16,48,8,"#1a3318");
+  drawPixelRect(x-22,y-24,44,40,customColor);
+  drawPixelRect(x-20,y-22,40,36,customColor);
+  drawPixelRect(x-16,y-12,32,4,"#145a32");
+  drawPixelRect(x-16,y,32,4,"#145a32");
+  drawPixelRect(x-25,y-32,50,10,"#145a32");
+  drawPixelRect(x-23,y-30,46,6,customColor);
+  drawPixelRect(x-10,y-36,20,5,"#145a32");
+  ctx.fillStyle="#fff";
+  ctx.font="900 14px monospace";
+  ctx.textAlign="center";
+  ctx.fillText(label||"♻️",x,y+4);
+  if(highlight){
+    const glow=Math.sin(globalAnim*0.2)*6+6;
+    ctx.strokeStyle="#7bf035";
+    ctx.lineWidth=3;
+    ctx.strokeRect(x-27-glow/2,y-34-glow/2,54+glow,56+glow);
+  }
+}
+
+function drawPixelTrash(x,y,type){
+  const t=type%5;
+  const floatY=Math.sin(globalAnim*0.1+type)*3;
+  const py=y+floatY;
+  drawPixelRect(x-8,y+8,16,4,"#1a3318");
+  if(t===0){
+    drawPixelRect(x-5,py-10,10,18,"#e74c3c");
+    drawPixelRect(x-3,py-8,6,14,"#fff");
+    drawPixelRect(x-2,py-13,4,4,"#34495e");
+  }else if(t===1){
+    drawPixelRect(x-7,py-7,14,14,"#f1c40f");
+    drawPixelRect(x-5,py-5,10,10,"#e67e22");
+  }else if(t===2){
+    drawPixelRect(x-6,py-6,12,12,"#e74c3c");
+    drawPixelRect(x-2,py-4,4,8,"#f5b7b1");
+  }else if(t===3){
+    drawPixelRect(x-6,py-9,12,16,"#3498db");
+    drawPixelRect(x-4,py-6,8,10,"#f39c12");
+  }else{
+    drawPixelRect(x-8,py-8,16,15,"#9b59b6");
+  }
+  drawPixelRect(x+5,py-10,2,2,"#fff");
+}
+
+function drawPowerUp(power){
+  if(!power) return;
+  const pulse=Math.sin(globalAnim*0.15)*4;
+  const icons={clock:"⏱️",magnet:"🧲",star:"⭐"};
+  ctx.save();
+  ctx.fillStyle="rgba(0,0,0,0.35)";
+  ctx.beginPath();
+  ctx.arc(power.x,power.y+5,19,0,Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle=power.type==="clock"?"#3498db":power.type==="magnet"?"#e74c3c":"#f1c40f";
+  ctx.beginPath();
+  ctx.arc(power.x,power.y,17+pulse,0,Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle="#fff";
+  ctx.lineWidth=3;
+  ctx.stroke();
+  ctx.font="22px Arial";
+  ctx.textAlign="center";
+  ctx.textBaseline="middle";
+  ctx.fillText(icons[power.type],power.x,power.y);
+  ctx.restore();
+}
+
+function drawPixelEnemy(enemy){
+  const {x,y,type,anim}=enemy;
+  const bounce=Math.abs(Math.sin(anim*0.15))*4;
+  const w=34+bounce;
+  const h=28-bounce;
+  drawPixelRect(x-w/2,y+2,w,6,"#142217");
+  if(type===0){
+    drawPixelRect(x-w/2,y-h,w,h,"#922b21");
+    drawPixelRect(x-w/2+3,y-h+3,w-6,h-5,"#e74c3c");
+    drawPixelRect(x-9,y-h+9,6,7,"#f1c40f");
+    drawPixelRect(x+3,y-h+9,6,7,"#f1c40f");
+    drawPixelRect(x-7,y-h+11,2,3,"#000");
+    drawPixelRect(x+5,y-h+11,2,3,"#000");
+  }else if(type===1){
+    const floatY=Math.sin(anim*0.2)*5;
+    drawPixelRect(x-w/2,y-h+floatY,w,h,"#117a65");
+    drawPixelRect(x-w/2+3,y-h+3+floatY,w-6,h-5,"#1abc9c");
+    drawPixelRect(x-8,y-h+8+floatY,6,6,"#8e44ad");
+    drawPixelRect(x+2,y-h+8+floatY,6,6,"#8e44ad");
+    drawPixelRect(x-6,y-h+10+floatY,2,2,"#fff");
+    drawPixelRect(x+4,y-h+10+floatY,2,2,"#fff");
+  }else{
+    drawPixelRect(x-w/2,y-h,w,h,"#b7950b");
+    drawPixelRect(x-w/2+3,y-h+3,w-6,h-5,"#f39c12");
+    drawPixelRect(x-4,y-h-4,8,4,"#e67e22");
+    drawPixelRect(x-9,y-h+8,6,6,"#641e16");
+    drawPixelRect(x+3,y-h+8,6,6,"#641e16");
+    drawPixelRect(x-7,y-h+10,2,2,"#e74c3c");
+    drawPixelRect(x+5,y-h+10,2,2,"#e74c3c");
+  }
+}
+
+function drawBoss(){
+  if(!boss) return;
+  const pulse=Math.sin(globalAnim*0.12)*4;
+  const x=boss.x;
+  const y=boss.y;
+  const king=boss.kind==="king";
+  const size=king?1.65:1.35;
+  const w=(king?62:48)+pulse;
+  const h=(king?58:43)+pulse;
+
+  ctx.save();
+  ctx.fillStyle="rgba(0,0,0,.35)";
+  ctx.beginPath();
+  ctx.ellipse(x,y+9,w*.65,12,0,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.strokeStyle=king?"#f1c40f":"#ff8c42";
+  ctx.lineWidth=4;
+  ctx.beginPath();
+  ctx.arc(x,y-12,w*.7+Math.sin(globalAnim*.1)*4,0,Math.PI*2);
+  ctx.stroke();
+
+  drawPixelRect(x-w/2,y-h,w,h,"#713b18");
+  drawPixelRect(x-w/2+5,y-h+5,w-10,h-10,king?"#a84300":"#c65d17");
+  drawPixelRect(x-w/2-9,y-h+12,12,h*.55,"#5b2c06");
+  drawPixelRect(x+w/2-3,y-h+12,12,h*.55,"#5b2c06");
+
+  drawPixelRect(x-15*size,y-h+16*size,9*size,10*size,"#f1c40f");
+  drawPixelRect(x+6*size,y-h+16*size,9*size,10*size,"#f1c40f");
+  drawPixelRect(x-12*size,y-h+19*size,4*size,5*size,"#111");
+  drawPixelRect(x+9*size,y-h+19*size,4*size,5*size,"#111");
+  drawPixelRect(x-10*size,y-h+34*size,20*size,5*size,"#30120a");
+
+  if(king){
+    drawPixelRect(x-22,y-h-12,44,9,"#f1c40f");
+    drawPixelRect(x-20,y-h-22,8,13,"#f1c40f");
+    drawPixelRect(x-4,y-h-27,8,18,"#f1c40f");
+    drawPixelRect(x+12,y-h-22,8,13,"#f1c40f");
+    drawPixelRect(x-4,y-h-20,8,5,"#e74c3c");
+  }else{
+    drawPixelRect(x-22,y-h-8,44,8,"#263238");
+    drawPixelRect(x-13,y-h-17,26,10,"#34495e");
+    drawPixelRect(x-4,y-h-14,8,4,"#f1c40f");
+  }
+
+  if(bossDamageFlash>0){
+    ctx.globalAlpha=.35;
+    drawPixelRect(x-w/2,y-h,w,h,"#fff");
+    ctx.globalAlpha=1;
+  }
+  ctx.restore();
+}
+
+function drawBossBar(){
+  if(!boss) return;
+  const barW=310, barH=17, x=(850-barW)/2, y=126;
+  const ratio=Math.max(0,boss.hp/boss.maxHp);
+
+  ctx.save();
+  ctx.fillStyle="rgba(0,0,0,.75)";
+  ctx.fillRect(x-5,y-25,barW+10,barH+35);
+  ctx.textAlign="center";
+  ctx.font="bold 14px monospace";
+  ctx.fillStyle="#fff";
+  ctx.fillText(boss.name,x+barW/2,y-9);
+  ctx.fillStyle="#421c1c";
+  ctx.fillRect(x,y,barW,barH);
+  ctx.fillStyle=ratio>.5?"#7bf035":ratio>.25?"#f1c40f":"#e74c3c";
+  ctx.fillRect(x,y,barW*ratio,barH);
+  ctx.strokeStyle="#fff";
+  ctx.lineWidth=2;
+  ctx.strokeRect(x,y,barW,barH);
+  ctx.font="bold 11px monospace";
+  ctx.fillStyle="#fff";
+  ctx.fillText(boss.hp+" / "+boss.maxHp,x+barW/2,y+12);
+  ctx.restore();
+}
+
+function drawPixelPlayer(x,y,skinKey,carried,animFrame,isP1){
+  const walk=Math.sin(animFrame*.25)*4;
+  const skin=skins[skinKey]||skins.azulDenzil;
+  const primaryColor=skin.color;
+
+  drawPixelRect(x-10,y+2,20,5,"#1a3318");
+  drawPixelRect(x-9,y-5+walk,6,6,"#1b2631");
+  drawPixelRect(x+3,y-5-walk,6,6,"#1b2631");
+  drawPixelRect(x-11,y-22,22,17,primaryColor);
+  drawPixelRect(x-7,y-22,14,17,"#fff");
+
+  if(isP1){
+    drawPixelRect(x-15,y-20,5,12,"#1b2631");
+    drawPixelRect(x-14,y-19,3,10,skin.accent);
+    drawPixelRect(x+10,y-20,5,12,"#1b2631");
+    drawPixelRect(x+11,y-19,3,10,skin.accent);
+  } else {
+    drawPixelRect(x-15,y-20,5,12,"#1b2631");
+    drawPixelRect(x-14,y-19,3,10,"#ef4444");
+    drawPixelRect(x+10,y-20,5,12,"#1b2631");
+    drawPixelRect(x+11,y-19,3,10,"#ef4444");
+  }
+
+  drawPixelRect(x-9,y-35,18,13,"#f5cba7");
+  drawPixelRect(x-10,y-38,20,6,isP1?skin.accent:"#ef4444");
+  drawPixelRect(x-5,y-30,3,3,"#1b2631");
+  drawPixelRect(x+2,y-30,3,3,"#1b2631");
+
+  if(carried>0){
+    drawPixelRect(x+10,y-24,10,15,"#e67e22");
+    ctx.fillStyle="#fff";
+    ctx.font="900 12px monospace";
+    ctx.fillText("x"+carried,x+15,y-26);
+  }
+  if(shieldCharges>0||invincibleTime>0){
+    ctx.strokeStyle=invincibleTime>0?"#f1c40f":"#00d2d3";
+    ctx.lineWidth=3;
+    ctx.beginPath();
+    ctx.arc(x,y-18,26,0,Math.PI*2);
+    ctx.stroke();
+  }
+}
+
+function addParticles(x,y,color,count=8){
+  for(let i=0;i<count;i++){
+    particles.push({x,y,vx:(Math.random()-.5)*5,vy:(Math.random()-.5)*5,life:1,color});
+  }
+}
+
+function updateAndDrawParticles(){
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.x+=p.vx; p.y+=p.vy; p.life-=.05;
+    if(p.life<=0){particles.splice(i,1);}else{
+      ctx.fillStyle=p.color; ctx.globalAlpha=p.life;
+      ctx.fillRect(Math.round(p.x),Math.round(p.y),4,4);
+      ctx.globalAlpha=1;
+    }
+  }
+}
+
+function updateHUD(){
+  const timeBoxElem = document.getElementById("timeBox");
+  if(gameMode==="pvp"){
+    timeBoxElem.innerHTML = `⏱️ <span id="time">${time}</span>s | 🔵P1: ${p1Score} - 🔴P2: ${p2Score}`;
+  } else {
+    timeBoxElem.innerHTML = `⏱️ <span id="time">${time}</span>s | Nivel <span id="levelNum">${level+1}</span>`;
+  }
+
+  if(time <= 10) {
+    timeBoxElem.classList.add("critical");
+  } else {
+    timeBoxElem.classList.remove("critical");
+  }
+
+  document.getElementById("badgeBackpack").textContent=backpackCapacity;
+  document.getElementById("badgeRange").textContent=rangeLevel;
+
+  const shieldContainer=document.getElementById("badgeShieldContainer");
+  if(shieldCharges>0){
+    shieldContainer.classList.remove("hidden");
+    document.getElementById("badgeShield").textContent=shieldCharges;
+  }else{
+    shieldContainer.classList.add("hidden");
+  }
+  document.getElementById("badgeSpeedContainer").classList.toggle("hidden",!hasSpeedBoost);
+}
+
+function unlockAchievement(key){
+  if(achievements[key]&&!achievements[key].unlocked){
+    achievements[key].unlocked=true;
+    playSound("bossDefeat");
+    saveUserData();
+  }
+}
+
+function checkTutorialTriggers(){
+  if(level===0){
+    triggerTutorial(
+      "CONTROLES: WASD / Flechas o Joystick",
+      "USO: Recoge basura y llévala a la caneca verde sin que te atrapen"
+    );
+  }else if(level===1){
+    triggerTutorial(
+      "POWER-UPS: Reloj congela | Iman atrae basura | Estrella protege",
+      "Desde el nivel 6 los mapas rotan cada 5 niveles"
+    );
+  }else if(level===4){
+    triggerTutorial(
+      "JEFE: Inspector del Desorden",
+      "Recoge residuos para golpearlo y esquiva su avance"
+    );
+  }else if(level===9){
+    triggerTutorial(
+      "JEFE FINAL: Rey de la Basura",
+      "Recoge residuos rápido y mantente en movimiento"
+    );
+  }
+}
+
+function triggerTutorial(line1, line2=""){
+  activeTutorialMsg={line1, line2};
+  tutorialTimer=9000;
+}
+
+function startGame(mode){
+  initAudio();
+  gameMode=mode; level=0; score=0; speed=2.8; reach=34; shieldCharges=0;
+  backpackCapacity=1; backpackLevel=1; rangeLevel=1; hasSpeedBoost=false;
+  p1Score=0; p2Score=0; totalCollectedThisGame=0;
+  keys={}; paused=false; menuOverlay.classList.add("hidden");
+  resetJoystick(0); resetJoystick(1);
+  document.getElementById("playerTwoControls").classList.toggle("hidden",mode==="solo");
+  overlay.classList.add("hidden");
+  setupLevel();
+  startBackgroundMusic();
+  if(mode!=="solo") unlockAchievement("coopHero");
+}
+
+function setupLevel(){
+  const c=configs[level];
+  let enemySpeedMult=1.1, levelTime=c.t;
+  if(selectedDifficulty==="easy"){enemySpeedMult=.9; levelTime+=15;}
+  if(selectedDifficulty==="hard"){enemySpeedMult=1.35; levelTime-=6;}
+  if(gameMode!=="solo") enemySpeedMult+=.15;
+
+  if(gameMode==="pvp"){
+    p1Bin={x:120, y:470};
+    p2Bin={x:730, y:470};
+  } else {
+    currentBinPos=binCorners[Math.floor(Math.random()*binCorners.length)];
+  }
+
+  players=[{x:300,y:450,carried:0,anim:0,skin:currentSkin}];
+  if(gameMode!=="solo") players.push({x:550,y:450,carried:0,anim:0,skin:currentSkin});
+
+  time=levelTime; elapsed=0; spawnElapsed=0;
+  spawnInterval=Math.max(3500,7000-level*400);
+
+  activePowerUp=null; frozenEnemies=0; magnetTime=0; invincibleTime=0;
+  powerUpSpawnElapsed=0; nextPowerUpSpawn=9000+Math.random()*7000;
+
+  const totalItems=Math.min(places.length,c.n+(gameMode!=="solo"?3:0));
+  items=places.slice(0,totalItems).map((p,i)=>({x:p[0],y:p[1],type:i,taken:false}));
+
+  enemies=[];
+  const initialEnemiesCount=(gameMode!=="solo"||selectedDifficulty==="hard")?2:1;
+  for(let i=0;i<initialEnemiesCount;i++){
+    const pos=enemyPlaces[i%enemyPlaces.length];
+    let spd=.85+level*.05;
+    if(selectedDifficulty==="hard") spd*=1.25;
+    enemies.push({x:pos[0],y:pos[1],speed:spd*enemySpeedMult,type:i%3,anim:Math.random()*10});
+  }
+
+  boss=null; bossDefeated=true; bossIntroTime=0; bossDamageFlash=0; bossMessageTime=0;
+  if((level===4||level===9) && gameMode!=="pvp"){
+    const isKing=level===9;
+    boss={
+      x:425, y:145, kind:isKing?"king":"inspector",
+      name:isKing?"REY DE LA BASURA":"INSPECTOR DEL DESORDEN",
+      hp:isKing?15:8, maxHp:isKing?15:8,
+      speed:(isKing?1.35:1.05)*enemySpeedMult, attackCooldown:0, anim:0
+    };
+    bossDefeated=false; bossIntroTime=2500; bossMessageTime=3000;
+  }
+
+  started=true; finished=false; keys={};
+  resetJoystick(0); resetJoystick(1);
+  updateHUD();
+  if(gameMode!=="pvp") checkTutorialTriggers();
+}
+
+function render(){
+  globalAnim+=.5;
+
+  if(level < 5){
+    ctx.fillStyle="#27ae60"; ctx.fillRect(0,0,850,540);
+    ctx.fillStyle="#219653";
+    for(let gx=10;gx<850;gx+=32){
+      for(let gy=95;gy<540;gy+=32){if((gx+gy)%64===0) ctx.fillRect(gx,gy,6,6);}
+    }
+    [[50,130],[790,170],[80,360],[740,440]].forEach(p=>{
+      drawPixelRect(p[0]-8,p[1]-8,16,26,"#5d4037");
+      drawPixelRect(p[0]-28,p[1]-44,56,36,"#1e8449");
+    });
+  }else{
+    const mapType = Math.floor((level - 5) / 5) % 4;
+
+    if(mapType===0){
+      ctx.fillStyle="#1b4d3e"; ctx.fillRect(0,0,850,540);
+      ctx.fillStyle="#14382c";
+      for(let gx=10;gx<850;gx+=32){for(let gy=95;gy<540;gy+=32){if((gx+gy)%64===0) ctx.fillRect(gx,gy,6,6);}}
+      ctx.strokeStyle="rgba(255,255,255,0.45)"; ctx.lineWidth=4;
+      ctx.beginPath(); ctx.moveTo(425,95); ctx.lineTo(425,540); ctx.stroke();
+      ctx.beginPath(); ctx.arc(425,315,65,0,Math.PI*2); ctx.stroke();
+      ctx.strokeRect(25,185,90,260); ctx.strokeRect(735,185,90,260);
+      drawPixelRect(15,220,12,190,"#d35400"); drawPixelRect(823,220,12,190,"#d35400");
+    }else if(mapType===1){
+      ctx.fillStyle="#8c6747"; ctx.fillRect(0,0,850,540);
+      ctx.fillStyle="#735237";
+      for(let gx=15;gx<850;gx+=40){for(let gy=105;gy<540;gy+=40){ctx.fillRect(gx,gy,36,36);}}
+      ctx.strokeStyle="#a67c52"; ctx.lineWidth=3; ctx.strokeRect(100,130,650,370);
+      [[140,170],[710,170],[140,450],[710,450]].forEach(b=>{
+        drawPixelRect(b[0]-15,b[1]-15,30,30,"#5c4033");
+      });
+    }else if(mapType===2){
+      ctx.fillStyle="#b85d33"; ctx.fillRect(0,0,850,540);
+      ctx.fillStyle="#9e4e29";
+      for(let gx=10;gx<850;gx+=32){for(let gy=95;gy<540;gy+=32){if((gx+gy)%64===0) ctx.fillRect(gx,gy,6,6);}}
+      ctx.strokeStyle="#f5deb3"; ctx.lineWidth=4;
+      ctx.beginPath(); ctx.ellipse(425,315,360,180,0,0,Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(425,315,260,110,0,0,Math.PI*2); ctx.stroke();
+    }else{
+      ctx.fillStyle="#3a506b"; ctx.fillRect(0,0,850,540);
+      ctx.fillStyle="#2c3e50";
+      for(let gx=10;gx<850;gx+=32){for(let gy=95;gy<540;gy+=32){if((gx+gy)%64===0) ctx.fillRect(gx,gy,6,6);}}
+      ctx.strokeStyle="#5bc0be"; ctx.lineWidth=3; ctx.strokeRect(50,115,750,390);
+      ctx.beginPath(); ctx.moveTo(50,310); ctx.lineTo(800,310); ctx.stroke();
+    }
+  }
+
+  drawPixelRect(0,0,850,90,"#b03a2e");
+  drawPixelRect(0,78,850,12,"#7b241c");
+  for(let x=25;x<820;x+=105){
+    drawPixelRect(x,15,65,48,"#3498db");
+    drawPixelRect(x+5,20,25,38,"#5ded86");
+    ctx.strokeStyle="#fff"; ctx.lineWidth=3; ctx.strokeRect(x,15,65,48);
+  }
+
+  if(gameMode==="pvp"){
+    const p1Near=players[0].carried>0 && Math.hypot(players[0].x-p1Bin.x, players[0].y-p1Bin.y)<90;
+    const p2Near=players.length>1 && players[1].carried>0 && Math.hypot(players[1].x-p2Bin.x, players[1].y-p2Bin.y)<90;
+    drawPixelBin(p1Bin.x, p1Bin.y, p1Near, "#2563eb", "P1");
+    drawPixelBin(p2Bin.x, p2Bin.y, p2Near, "#dc2626", "P2");
+  } else {
+    const anyPlayerHasTrashNearBin=players.some(p=>p.carried>0&&Math.hypot(p.x-currentBinPos.x,p.y-currentBinPos.y)<90);
+    drawPixelBin(currentBinPos.x,currentBinPos.y,anyPlayerHasTrashNearBin);
+  }
+
+  items.forEach(item=>{if(!item.taken) drawPixelTrash(item.x,item.y,item.type);});
+  drawPowerUp(activePowerUp);
+  updateAndDrawParticles();
+
+  enemies.forEach(enemy=>{enemy.anim+=.25; drawPixelEnemy(enemy);});
+  if(boss&&gameMode!=="pvp"){boss.anim+=.25; drawBoss(); drawBossBar();}
+
+  players.forEach((p,i)=>{
+    drawPixelPlayer(p.x,p.y,p.skin,p.carried,p.anim,i===0);
+  });
+
+  if(bossMessageTime>0&&boss&&gameMode!=="pvp"){
+    ctx.save();
+    ctx.fillStyle="rgba(0,0,0,.65)"; ctx.fillRect(210,190,430,48);
+    ctx.font="bold 20px monospace"; ctx.textAlign="center";
+    ctx.fillStyle=boss.kind==="king"?"#f1c40f":"#ffae42";
+    ctx.fillText(boss.name,425,220);
+    ctx.restore();
+  }
+
+  if(activeTutorialMsg&&tutorialTimer>0){
+    ctx.save();
+    const boxH = activeTutorialMsg.line2 ? 66 : 50;
+    const boxY = 305;
+    ctx.fillStyle="rgba(18, 34, 41, 0.96)";
+    ctx.strokeStyle="#7bf035";
+    ctx.lineWidth=3;
+    ctx.fillRect(95, boxY, 660, boxH);
+    ctx.strokeRect(95, boxY, 660, boxH);
+    ctx.font="bold 13px monospace";
+    ctx.textAlign="center";
+    ctx.fillStyle="#7bf035";
+    if(activeTutorialMsg.line2){
+      ctx.fillText(activeTutorialMsg.line1, 425, boxY + 25);
+      ctx.fillStyle="#fff";
+      ctx.fillText(activeTutorialMsg.line2, 425, boxY + 48);
+    } else {
+      ctx.fillText(activeTutorialMsg.line1, 425, boxY + 30);
+    }
+    ctx.restore();
+  }
+
+  if(frozenEnemies>0||magnetTime>0||invincibleTime>0){
+    ctx.save();
+    ctx.font="bold 15px monospace"; ctx.textAlign="center"; ctx.fillStyle="#fff";
+    let labels=[];
+    if(frozenEnemies>0) labels.push("⏱️ "+Math.ceil(frozenEnemies/1000));
+    if(magnetTime>0) labels.push("🧲 "+Math.ceil(magnetTime/1000));
+    if(invincibleTime>0) labels.push("⭐ "+Math.ceil(invincibleTime/1000));
+    ctx.fillText(labels.join("   "),425,115);
+    ctx.restore();
+  }
+}
+
+function spawnPowerUp(){
+  if(activePowerUp) return;
+  const candidates=places.filter(pos=>!players.some(p=>Math.hypot(p.x-pos[0],p.y-pos[1])<100));
+  if(!candidates.length||Math.random()>.35) return;
+  const roll=Math.random();
+  let type=roll<.55?"clock":roll<.87?"magnet":"star";
+  const pos=candidates[Math.floor(Math.random()*candidates.length)];
+  activePowerUp={x:pos[0],y:pos[1],type};
+}
+
+function updatePowerUpTimers(delta){
+  frozenEnemies=Math.max(0,frozenEnemies-delta);
+  magnetTime=Math.max(0,magnetTime-delta);
+  invincibleTime=Math.max(0,invincibleTime-delta);
+  bossDamageFlash=Math.max(0,bossDamageFlash-delta);
+  bossIntroTime=Math.max(0,bossIntroTime-delta);
+  bossMessageTime=Math.max(0,bossMessageTime-delta);
+  if(tutorialTimer>0) tutorialTimer=Math.max(0,tutorialTimer-delta);
+
+  if(!activePowerUp){
+    powerUpSpawnElapsed+=delta;
+    if(powerUpSpawnElapsed>=nextPowerUpSpawn){
+      powerUpSpawnElapsed=0;
+      nextPowerUpSpawn=14000+Math.random()*8000;
+      spawnPowerUp();
+    }
+  }
+}
+
+function damageBoss(){
+  if(!boss||bossDefeated) return;
+  boss.hp--; bossDamageFlash=180;
+  addParticles(boss.x,boss.y-15,boss.kind==="king"?"#f1c40f":"#ffae42",10);
+  playSound("bossHit");
+  if(boss.hp<=0){
+    boss.hp=0; bossDefeated=true;
+    unlockAchievement("bossSlayer");
+    addParticles(boss.x,boss.y,"#7bf035",35);
+    addParticles(boss.x,boss.y,"#f1c40f",25);
+    playSound("bossDefeat");
+    boss=null; bossMessageTime=0;
+  }
+}
+
+function checkAutomaticInteractions(){
+  if(!started||finished||paused) return;
+
+  if(activePowerUp){
+    for(const p of players){
+      if(Math.hypot(p.x-activePowerUp.x,p.y-activePowerUp.y)<28){
+        const type=activePowerUp.type;
+        if(type==="clock") frozenEnemies=5000;
+        else if(type==="magnet") magnetTime=7000;
+        else if(type==="star") invincibleTime=6000;
+        addParticles(activePowerUp.x,activePowerUp.y,"#f1c40f",20);
+        playSound("powerup");
+        activePowerUp=null;
+        break;
+      }
+    }
+  }
+
+  players.forEach((p,i)=>{
+    if(p.carried<backpackCapacity){
+      items.forEach(item=>{
+        if(!item.taken&&Math.hypot(p.x-item.x,p.y-item.y)<reach){
+          item.taken=true; p.carried++;
+          totalCollectedThisGame++;
+          playSound("pickup");
+          addParticles(item.x,item.y,"#f1c40f",10);
+          if(boss&&!bossDefeated&&gameMode!=="pvp") damageBoss();
+        }
+      });
+    }
+
+    if(gameMode==="pvp"){
+      const bin=i===0?p1Bin:p2Bin;
+      const nearBin=Math.hypot(p.x-bin.x,p.y-bin.y)<60;
+      if(p.carried>0&&nearBin){
+        if(i===0) p1Score+=p.carried*10; else p2Score+=p.carried*10;
+        score+=p.carried*10;
+        if(score>highScore){highScore=score; saveUserData();}
+        playSound("bin");
+        addParticles(bin.x,bin.y-10,i===0?"#3b82f6":"#ef4444",16);
+        p.carried=0;
+
+        const allTrashCollected=items.every(x=>x.taken)&&players.every(pl=>pl.carried===0);
+        if(allTrashCollected){finishLevel(); return;}
+      }
+    } else {
+      const nearBin=Math.hypot(p.x-currentBinPos.x,p.y-currentBinPos.y)<60;
+      if(p.carried>0&&nearBin){
+        score+=p.carried*10;
+        if(score>highScore){highScore=score; saveUserData();}
+        playSound("bin");
+        addParticles(currentBinPos.x,currentBinPos.y-10,"#7bf035",16);
+        p.carried=0;
+
+        const allTrashCollected=items.every(x=>x.taken)&&players.every(pl=>pl.carried===0);
+        if(allTrashCollected&&(!boss||bossDefeated)){
+          unlockAchievement("firstClean");
+          if(time>=30) unlockAchievement("speedRun");
+          updateHUD(); finishLevel(); return;
+        }
+      }
+    }
+  });
+  updateHUD();
+}
+
+function movePlayer(p,dx,dy){
+  if(dx!==0||dy!==0){
+    p.anim++;
+    const len=Math.hypot(dx,dy)||1;
+    p.x=Math.max(25,Math.min(825,p.x+(dx/len)*speed));
+    p.y=Math.max(105,Math.min(515,p.y+(dy/len)*speed));
+  }
+}
+
+function spawnEnemy(){
+  const maxAllowedEnemies=2+level+(gameMode!=="solo"?2:0);
+  if(enemies.length>=maxAllowedEnemies) return;
+  let pos=enemyPlaces[Math.floor(Math.random()*enemyPlaces.length)];
+  for(let i=0;i<10;i++){
+    const cand=enemyPlaces[Math.floor(Math.random()*enemyPlaces.length)];
+    if(!players.some(p=>Math.hypot(p.x-cand[0],p.y-cand[1])<180)){pos=cand; break;}
+  }
+  let spd=.85+level*.05;
+  if(selectedDifficulty==="hard") spd*=1.25;
+  enemies.push({x:pos[0],y:pos[1],speed:spd,type:Math.floor(Math.random()*3),anim:0});
+}
+
+function moveBoss(){
+  if(!boss||bossDefeated||bossIntroTime>0||gameMode==="pvp") return;
+  boss.attackCooldown=Math.max(0,boss.attackCooldown-16);
+
+  const target=players.reduce((near,p)=>{
+    const d=Math.hypot(p.x-boss.x,p.y-boss.y);
+    return d<near.d?{player:p,d}:near;
+  },{player:players[0],d:Infinity}).player;
+
+  const dx=target.x-boss.x, dy=target.y-boss.y;
+  const d=Math.hypot(dx,dy)||1;
+  let bossSpeed=boss.speed;
+  if(boss.kind==="king"&&d<180) bossSpeed*=1.25;
+
+  boss.x+=dx/d*bossSpeed; boss.y+=dy/d*bossSpeed;
+
+  players.forEach(p=>{
+    const hitDistance=boss.kind==="king"?43:35;
+    if(Math.hypot(p.x-boss.x,p.y-boss.y)<hitDistance){
+      if(invincibleTime>0){
+        addParticles(boss.x,boss.y,"#f1c40f",18);
+        boss.x=Math.max(80,Math.min(790,boss.x+(boss.x-p.x)*1.4));
+        boss.y=Math.max(120,Math.min(500,boss.y+(boss.y-p.y)*1.4));
+      }else if(shieldCharges>0){
+        shieldCharges--; updateHUD(); playSound("shield");
+        addParticles(p.x,p.y,"#00d2d3",15);
+        boss.x=Math.max(80,Math.min(790,boss.x+(boss.x-p.x)*1.4));
+        boss.y=Math.max(120,Math.min(500,boss.y+(boss.y-p.y)*1.4));
+      }else{playSound("hit"); die();}
+    }
+  });
+}
+
+function updatePhysics(){
+  if(!started||finished||paused) return;
+
+  let dx1=joystickState[0].x, dy1=joystickState[0].y;
+  if(keys.KeyW) dy1--; if(keys.KeyS) dy1++; if(keys.KeyA) dx1--; if(keys.KeyD) dx1++;
+  movePlayer(players[0],dx1,dy1);
+
+  if(gameMode!=="solo"&&players.length>1){
+    let dx2=joystickState[1].x, dy2=joystickState[1].y;
+    if(keys.ArrowUp) dy2--; if(keys.ArrowDown) dy2++; if(keys.ArrowLeft) dx2--; if(keys.ArrowRight) dx2++;
+    movePlayer(players[1],dx2,dy2);
+  }
+
+  if(magnetTime>0){
+    items.forEach(item=>{
+      if(item.taken) return;
+      const availablePlayers=players.filter(p=>p.carried<backpackCapacity);
+      if(!availablePlayers.length) return;
+      const target=availablePlayers.reduce((best,p)=>{
+        const d=Math.hypot(p.x-item.x,p.y-item.y);
+        return d<best.d?{player:p,d}:best;
+      },{player:availablePlayers[0],d:Infinity});
+      if(target.d<155&&target.d>1){
+        const attraction=2.5;
+        item.x+=(target.player.x-item.x)/target.d*attraction;
+        item.y+=(target.player.y-item.y)/target.d*attraction;
+      }
+    });
+  }
+
+  checkAutomaticInteractions();
+
+  if(frozenEnemies>0) return;
+
+  enemies.forEach(enemy=>{
+    const target=players.reduce((near,p)=>{
+      const d=Math.hypot(p.x-enemy.x,p.y-enemy.y);
+      return d<near.d?{player:p,d}:near;
+    },{player:players[0],d:Infinity}).player;
+
+    let ex=target.x-enemy.x, ey=target.y-enemy.y;
+    let spd=enemy.speed;
+    if(enemy.type===2&&Math.sin(enemy.anim)>.4) spd*=1.4;
+    const d=Math.hypot(ex,ey)||1;
+    enemy.x+=(ex/d)*spd; enemy.y+=(ey/d)*spd;
+
+    players.forEach(p=>{
+      if(Math.hypot(p.x-enemy.x,p.y-enemy.y)<25){
+        if(invincibleTime>0){
+          addParticles(enemy.x,enemy.y,"#f1c40f",15);
+          const pos=enemyPlaces[Math.floor(Math.random()*enemyPlaces.length)];
+          enemy.x=pos[0]; enemy.y=pos[1];
+        }else if(shieldCharges>0){
+          shieldCharges--; updateHUD(); playSound("shield");
+          addParticles(p.x,p.y,"#00d2d3",15);
+          const pos=enemyPlaces[Math.floor(Math.random()*enemyPlaces.length)];
+          enemy.x=pos[0]; enemy.y=pos[1];
+        }else{playSound("hit"); die();}
+      }
+    });
+  });
+
+  moveBoss();
+}
+
+function finishLevel(){
+  started=false; finished=true;
+  if(score>highScore){highScore=score; saveUserData();}
+
+  if(gameMode==="pvp"){
+    let winnerMsg = p1Score > p2Score ? "🏆 ¡JUGADOR 1 GANA LA PARTIDA!" : p2Score > p1Score ? "🏆 ¡JUGADOR 2 GANA LA PARTIDA!" : "🤝 ¡EMPATE TÉCNICO!";
+    showPanel("VS COMPETITIVO FINALIZADO", `${winnerMsg}<br><br><b>P1 (Azul):</b> ${p1Score} pts<br><b>P2 (Rojo):</b> ${p2Score} pts`, "PARTIDA PVP", "VOLVER A JUGAR", showModeSelection);
+  }else if(level===9){
+    showPanel("🏆 ¡MAESTROS DEL RECICLAJE!", `¡Han superado todos los niveles!<br><br><b>Puntaje:</b> ${score} pts<br><b>Basura Recogida:</b> ${totalCollectedThisGame}`, "¡VICTORIA TOTAL!", "VOLVER A JUGAR", showModeSelection);
+  }else{
+    showPanel(`🎉 ¡NIVEL ${level+1} SUPERADO!`, `<b>Tiempo Restante:</b> ${time}s<br><b>Basura Recogida:</b> ${totalCollectedThisGame}`, `Puntaje Actual: ${score}`, "SIGUIENTE NIVEL", chooseSkill);
+  }
+}
+
+function chooseSkill(){
+  const pool=skills.filter(s=>!s.available||s.available());
+  const choices=[];
+  while(choices.length<3&&pool.length){
+    const idx=Math.floor(Math.random()*pool.length);
+    choices.push(pool.splice(idx,1)[0]);
+  }
+
+  panel.innerHTML=`
+    <img src="https://pqrsd.denzilescolar.edu.co/uploads/images/c3e0f-descarga-removebg-preview.png" class="logo" alt="Escudo">
+    <h1>🎁 ELIJA UNA MEJORA</h1>
+    <p style="font-size:13px;margin-bottom:10px;">Beneficio para el equipo:</p>`;
+
+  choices.forEach(s=>{
+    const b=document.createElement("button");
+    b.className="skill";
+    b.innerHTML=`<b>${s.name}</b><br><small>${s.desc()}</small>`;
+    b.addEventListener("pointerdown",e=>{
+      e.preventDefault(); playClickSound(); s.apply(); level++; updateHUD();
+      overlay.classList.add("hidden"); setupLevel();
+    });
+    panel.appendChild(b);
+  });
+  overlay.classList.remove("hidden");
+}
+
+function die(){
+  if(!started) return;
+  started=false; finished=true;
+  if(score>highScore){highScore=score; saveUserData();}
+  showPanel("☠️ ¡GAME OVER!", `Un monstruo atrapó a uno de los jugadores.<br><br><b>Puntaje Final:</b> ${score}<br><b>Récord:</b> ${highScore}`, "INTÉNTALO DE NUEVO", "REINTENTAR", showModeSelection);
+}
+
+function showPanel(title,msg,pts,btnTxt,action){
+  panel.innerHTML=`
+    <img src="https://pqrsd.denzilescolar.edu.co/uploads/images/c3e0f-descarga-removebg-preview.png" class="logo" alt="Escudo">
+    <h1>${title}</h1>
+    <p style="font-size:13px;margin:8px 0;">${msg}</p>
+    <h3 style="color:#7bf035;margin:8px 0;">${pts}</h3>`;
+  const b=document.createElement("button");
+  b.textContent=btnTxt;
+  b.addEventListener("pointerdown",e=>{e.preventDefault(); playClickSound(); action();});
+  panel.appendChild(b);
+  overlay.classList.remove("hidden");
+}
+
+function showSkinsMenu(){
+  playClickSound();
+  panel.innerHTML=`
+    <img src="https://pqrsd.denzilescolar.edu.co/uploads/images/c3e0f-descarga-removebg-preview.png" class="logo" alt="Escudo">
+    <h1>👕 UNIFORME DENZIL ESCOLAR</h1>
+    <p style="font-size:12px;color:#93c5fd;margin:4px 0;">Previsualización del Jugador:</p>
+    <div class="previewCanvasContainer"><canvas id="prevSkin" width="90" height="90"></canvas></div>
+    <div class="skinSelector">
+      <button class="skinBtn ${currentSkin==='azulDenzil'?'active':''}" id="s1">Azul Denzil</button>
+      <button class="skinBtn ${currentSkin==='grisDenzil'?'active':''}" id="s2">Ed. Física</button>
+      <button class="skinBtn ${currentSkin==='promo11'?'active':''}" id="s3">✨ Promo 11°</button>
+    </div>
+    <button id="backFromSkins" style="margin-top:14px;">⌂ VOLVER AL MENÚ</button>`;
+
+  setTimeout(()=>{
+    const c=document.getElementById("prevSkin").getContext("2d");
+    c.imageSmoothingEnabled=false;
+    c.fillStyle="#1e3a2f"; c.fillRect(0,0,90,90);
+    drawPreviewCharacter(c, 45, 60, currentSkin);
+  }, 50);
+
+  document.getElementById("s1").addEventListener("pointerdown",e=>{e.preventDefault(); playClickSound(); currentSkin="azulDenzil"; saveUserData(); showSkinsMenu();});
+  document.getElementById("s2").addEventListener("pointerdown",e=>{e.preventDefault(); playClickSound(); currentSkin="grisDenzil"; saveUserData(); showSkinsMenu();});
+  document.getElementById("s3").addEventListener("pointerdown",e=>{e.preventDefault(); playClickSound(); currentSkin="promo11"; saveUserData(); showSkinsMenu();});
+  document.getElementById("backFromSkins").addEventListener("pointerdown",e=>{e.preventDefault(); playClickSound(); showModeSelection();});
+}
+
+function drawPreviewCharacter(context, x, y, skinKey){
+  const skin=skins[skinKey]||skins.azulDenzil;
+  context.fillStyle="#122229"; context.fillRect(x-10,y+2,20,5);
+  context.fillStyle="#1b2631"; context.fillRect(x-9,y-2,6,6); context.fillRect(x+3,y-2,6,6);
+  context.fillStyle=skin.color; context.fillRect(x-11,y-22,22,17);
+  context.fillStyle="#fff"; context.fillRect(x-7,y-22,14,17);
+
+  context.fillStyle="#1b2631"; context.fillRect(x-15,y-20,5,12);
+  context.fillStyle=skin.accent; context.fillRect(x-14,y-19,3,10);
+  context.fillStyle="#1b2631"; context.fillRect(x+10,y-20,5,12);
+  context.fillStyle=skin.accent; context.fillRect(x+11,y-19,3,10);
+
+  context.fillStyle="#f5cba7"; context.fillRect(x-9,y-35,18,13);
+  context.fillStyle=skin.accent; context.fillRect(x-10,y-38,20,6);
+  context.fillStyle="#1b2631"; context.fillRect(x-5,y-30,3,3); context.fillRect(x+2,y-30,3,3);
+}
+
+function showGuideMenu(){
+  playClickSound();
+  panel.innerHTML=`
+    <img src="https://pqrsd.denzilescolar.edu.co/uploads/images/c3e0f-descarga-removebg-preview.png" class="logo" alt="Escudo">
+    <h1>📖 GUÍA Y ACTUALIZACIONES</h1>
+    
+    <div class="guideBox">
+      <b>🎯 ¿De qué trata el juego?</b><br>
+      En <b>Operación: Colegio Limpio</b> defiendes las zonas de la Inst. Educativa Denzil Escolar (Sede Mega Colegio) recogiendo residuos esparcidos y depositándolos en la caneca ♻️ antes de que se agote el reloj o te atrapen los monstruos de la suciedad.
+    </div>
+
+    <div class="guideBox">
+      <b>🕹️ Controles y Uso</b><br>
+      • <b>PC:</b> Jugador 1 con <b>WASD</b> | Jugador 2 con <b>Flechas</b> | Pausa con <b>ESC</b>.<br>
+      • <b>Móvil / Táctil:</b> Joysticks en pantalla (izquierdo para P1, derecho en modos de 2 jugadores).<br>
+      • <b>Para qué se usan:</b> Mover al estudiante sobre la basura para recogerla automáticamente (según tu mochila y alcance) y llevarla a la caneca para sumar puntos.
+    </div>
+
+    <div class="guideBox">
+      <b>🚀 Última Versión (${changelogs[0].ver})</b><br>
+      • ${changelogs[0].desc}
+    </div>
+
+    <button id="openWikiBtn" class="secondary">📚 ABRIR WIKI DEL JUEGO</button>
+    <button id="viewAllChangelogsBtn" class="accent">📜 VER TODOS LOS CHANGELOGS</button>
+    <button id="backFromGuide">⌂ VOLVER AL MENÚ</button>`;
+
+  document.getElementById("openWikiBtn").addEventListener("pointerdown",e=>{e.preventDefault(); showWikiMenu("mecanicas");});
+  document.getElementById("viewAllChangelogsBtn").addEventListener("pointerdown",e=>{e.preventDefault(); showAllChangelogs();});
+  document.getElementById("backFromGuide").addEventListener("pointerdown",e=>{
+    e.preventDefault(); playClickSound();
+    started=false; finished=true;
+    showModeSelection();
+  });
+}
+
+function showWikiMenu(tab="mecanicas"){
+  playClickSound();
+  const sections={
+    mecanicas:`
+      <b>⚙️ Mecánicas y Modos</b><br>
+      • <b>Recolección y Caneca:</b> Cada residuo depositado suma <b>+10 pts</b>. Tu mochila limita cuántos cargas a la vez hasta que mejoras su capacidad.<br>
+      • <b>Solo:</b> Avanza por los niveles y mejora tus habilidades al completar cada ronda.<br>
+      • <b>Co-op:</b> 2 jugadores unen fuerzas para limpiar más rápido, con mayor exigencia de enemigos.<br>
+      • <b>PvP Competitivo:</b> 2 jugadores compiten por depositar más basura en su propia caneca (P1 azul / P2 rojo).<br>
+      • <b>Dificultades:</b> Fácil (+15s y enemigos más lentos), Normal y Difícil (-6s y enemigos más rápidos).`,
+    enemigos:`
+      <b>👾 Enemigos y Jefes</b><br>
+      • <b>Monstruo Rojo (Estándar):</b> Persigue al jugador más cercano con ritmo constante.<br>
+      • <b>Borracho Volador (Turquesa):</b> Flota y avanza de forma errática para dificultar tus rutas.<br>
+      • <b>Vándalo del Papel (Dorado):</b> Alterna ráfagas de velocidad más altas para sorprenderte.<br>
+      • <b>Inspector del Desorden (Nivel 5):</b> Jefe intermedio con barra de vida; cada residuo recogido le causa daño.<br>
+      • <b>Rey de la Basura (Nivel 10):</b> Jefe final con mayor resistencia y aceleración cerca del objetivo.`,
+    mapas:`
+      <b>🗺️ Mapas y Rotación</b><br>
+      • <b>Niveles 1 a 5:</b> Campo clásico verde con árboles y canecas ubicadas en esquinas.<br>
+      • <b>Desde el Nivel 6:</b> El escenario cambia cada 5 niveles en rotación fija:<br>
+        1. Cancha Sintética (Niveles 6-10)<br>
+        2. Plazoleta de Tierra (Niveles 11-15)<br>
+        3. Pista de Atletismo (Niveles 16-20)<br>
+        4. Patio Cívico (Niveles 21+)`,
+    powerups:`
+      <b>✨ Power-ups y Mejoras</b><br>
+      • <b>⏱️ Reloj:</b> Congela temporalmente a los enemigos comunes.<br>
+      • <b>🧲 Imán:</b> Atrae residuos cercanos hacia jugadores con espacio en su mochila.<br>
+      • <b>⭐ Estrella:</b> Otorga invencibilidad temporal y repele enemigos al contacto.<br>
+      • <b>Mejoras entre niveles:</b> Botas Veloces, Super Mochila (hasta Nv. 5), Guantes Eco (hasta Nv. 5), Campo de Fuerza e Impulso Eco.`
+  };
+
+  panel.innerHTML=`
+    <img src="https://pqrsd.denzilescolar.edu.co/uploads/images/c3e0f-descarga-removebg-preview.png" class="logo" alt="Escudo">
+    <h1>📚 WIKI DE OPERACIÓN: COLEGIO LIMPIO</h1>
+    <p style="font-size:12px;color:#93c5fd;margin:4px 0;">Explora las reglas, enemigos, mapas y mejoras:</p>
+    <div class="wikiTabs">
+      <button class="wikiTabBtn ${tab==='mecanicas'?'active':''}" id="tabMec">⚙️ Mecánicas</button>
+      <button class="wikiTabBtn ${tab==='enemigos'?'active':''}" id="tabEne">👾 Enemigos</button>
+      <button class="wikiTabBtn ${tab==='mapas'?'active':''}" id="tabMap">🗺️ Mapas</button>
+      <button class="wikiTabBtn ${tab==='powerups'?'active':''}" id="tabPow">✨ Power-ups</button>
+    </div>
+    <div class="guideBox">${sections[tab]||sections.mecanicas}</div>
+    <button id="backToGuideFromWiki" class="secondary">⬅ VOLVER A LA GUÍA</button>`;
+
+  document.getElementById("tabMec").addEventListener("pointerdown",e=>{e.preventDefault(); showWikiMenu("mecanicas");});
+  document.getElementById("tabEne").addEventListener("pointerdown",e=>{e.preventDefault(); showWikiMenu("enemigos");});
+  document.getElementById("tabMap").addEventListener("pointerdown",e=>{e.preventDefault(); showWikiMenu("mapas");});
+  document.getElementById("tabPow").addEventListener("pointerdown",e=>{e.preventDefault(); showWikiMenu("powerups");});
+  document.getElementById("backToGuideFromWiki").addEventListener("pointerdown",e=>{e.preventDefault(); showGuideMenu();});
+}
+
+function showAllChangelogs(){
+  playClickSound();
+  let listHtml="";
+  changelogs.forEach(item=>{
+    listHtml+=`
+      <div class="changelogItem">
+        <b style="color:#7bf035;">${item.ver}</b><br>
+        <span style="color:#cbd5e1;">${item.desc}</span>
+      </div>`;
+  });
+
+  panel.innerHTML=`
+    <img src="https://pqrsd.denzilescolar.edu.co/uploads/images/c3e0f-descarga-removebg-preview.png" class="logo" alt="Escudo">
+    <h1>📜 HISTORIAL DE CHANGELOGS</h1>
+    <p style="font-size:12px;color:#93c5fd;margin-bottom:8px;">Todas las actualizaciones del juego:</p>
+    <div class="guideBox">${listHtml}</div>
+    <button id="backToGuide" class="secondary">⬅ VOLVER A LA GUÍA</button>`;
+
+  document.getElementById("backToGuide").addEventListener("pointerdown",e=>{e.preventDefault(); showGuideMenu();});
+}
+
+function showAchievementsMenu(){
+  playClickSound();
+  let html=`
+    <img src="https://pqrsd.denzilescolar.edu.co/uploads/images/c3e0f-descarga-removebg-preview.png" class="logo" alt="Escudo">
+    <h1>🏆 LOGROS Y TROFEOS</h1>
+    <p style="font-size:12px;margin-bottom:10px;">Metas completadas en Denzil Escolar:</p>`;
+  
+  for(let key in achievements){
+    const ach=achievements[key];
+    html+=`
+      <div class="achievementItem ${ach.unlocked?'unlocked':''}">
+        <span style="font-size:24px;">${ach.unlocked?'✅':'🔒'}</span>
+        <div>
+          <b style="font-size:13px;color:${ach.unlocked?'#7bf035':'#aaa'}">${ach.title}</b><br>
+          <small style="color:#cbd5e1">${ach.desc}</small>
+        </div>
+      </div>`;
+  }
+  html+=`<button id="backFromAch">⌂ VOLVER AL MENÚ</button>`;
+  panel.innerHTML=html;
+
+  document.getElementById("backFromAch").addEventListener("pointerdown",e=>{
+    e.preventDefault(); playClickSound();
+    started=false; finished=true;
+    showModeSelection();
+  });
+}
+
+function showPlayMenu(){
+  playClickSound();
+  panel.innerHTML=`
+    <img src="https://pqrsd.denzilescolar.edu.co/uploads/images/c3e0f-descarga-removebg-preview.png" class="logo" alt="Escudo">
+    <h1>🎮 CONFIGURAR PARTIDA</h1>
+    <p style="font-size:12px;color:#93c5fd;margin:4px 0;">Selecciona la Dificultad:</p>
+    <div class="diffSelector">
+      <button class="diffBtn ${selectedDifficulty==="easy"?"active":""}" id="diffEasy">FÁCIL</button>
+      <button class="diffBtn ${selectedDifficulty==="normal"?"active":""}" id="diffNormal">NORMAL</button>
+      <button class="diffBtn ${selectedDifficulty==="hard"?"active":""}" id="diffHard">DIFÍCIL</button>
+    </div>
+    <p style="font-size:12px;color:#93c5fd;margin:8px 0 4px 0;">Selecciona el Modo de Juego:</p>
+    <button id="solo">▶ 1 JUGADOR (SOLO)</button>
+    <button id="coop" class="secondary">👥 2 JUGADORES (CO-OP)</button>
+    <button id="pvp" class="accent">⚡ 2 JUGADORES (PVP COMPETITIVO)</button>
+    <button id="backToMain" style="background:#334155;margin-top:14px;">⌂ VOLVER AL MENÚ</button>`;
+
+  document.getElementById("diffEasy").addEventListener("pointerdown",e=>{e.preventDefault();setDifficulty("easy");});
+  document.getElementById("diffNormal").addEventListener("pointerdown",e=>{e.preventDefault();setDifficulty("normal");});
+  document.getElementById("diffHard").addEventListener("pointerdown",e=>{e.preventDefault();setDifficulty("hard");});
+  document.getElementById("solo").addEventListener("pointerdown",e=>{e.preventDefault(); playClickSound(); startGame("solo");});
+  document.getElementById("coop").addEventListener("pointerdown",e=>{e.preventDefault(); playClickSound(); startGame("coop");});
+  document.getElementById("pvp").addEventListener("pointerdown",e=>{e.preventDefault(); playClickSound(); startGame("pvp");});
+  document.getElementById("backToMain").addEventListener("pointerdown",e=>{e.preventDefault(); playClickSound(); showModeSelection();});
+}
+
+function showModeSelection(){
+  panel.innerHTML=`
+    <img src="https://pqrsd.denzilescolar.edu.co/uploads/images/c3e0f-descarga-removebg-preview.png" class="logo" alt="Escudo">
+    <h1>OPERACIÓN: COLEGIO LIMPIO</h1>
+    <h2 class="subtitle">Inst. Educativa Denzil Escolar • Sede Mega Colegio</h2>
+    <p style="font-size:12px;color:#facc15;margin-bottom:6px;">🏆 Récord Máximo: <span id="highScoreDisplay">${highScore}</span> pts</p>
+    
+    <button class="bigPlay" id="mainPlayBtn">🎮 JUGAR</button>
+    <button id="skinsMenuBtn" class="accent">👕 PERSONALIZAR UNIFORME</button>
+    <button id="guideMenuBtn" class="secondary">📖 GUÍA, WIKI Y ACTUALIZACIONES</button>
+    <button id="achievementsMenuBtn" style="background:#334155">🏆 LOGROS Y TROFEOS</button>`;
+
+  document.getElementById("mainPlayBtn").addEventListener("pointerdown",e=>{e.preventDefault(); showPlayMenu();});
+  document.getElementById("skinsMenuBtn").addEventListener("pointerdown",e=>{e.preventDefault(); showSkinsMenu();});
+  document.getElementById("guideMenuBtn").addEventListener("pointerdown",e=>{e.preventDefault(); showGuideMenu();});
+  document.getElementById("achievementsMenuBtn").addEventListener("pointerdown",e=>{e.preventDefault(); showAchievementsMenu();});
+  overlay.classList.remove("hidden");
+}
+
+function gameLoop(now){
+  if(!last) last=now;
+  const delta=Math.min(now-last,100);
+  last=now;
+
+  if(started&&!finished&&!paused){
+    elapsed+=delta;
+    if(elapsed>=1000){
+      const sec=Math.floor(elapsed/1000);
+      time-=sec; elapsed-=sec*1000;
+      updateHUD();
+      if(time<=0){time=0; die();}
+    }
+    spawnElapsed+=delta;
+    if(spawnElapsed>=spawnInterval){spawnElapsed=0; spawnEnemy();}
+    updatePowerUpTimers(delta);
+    updatePhysics();
+  }
+  render();
+  requestAnimationFrame(gameLoop);
+}
+
+window.addEventListener("keydown",e=>{
+  if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].includes(e.code)) e.preventDefault();
+  if(e.code==="Escape"&&started&&!finished){
+    if(paused) closeMenu(); else openMenu(); return;
+  }
+  keys[e.code]=true;
+});
+window.addEventListener("keyup",e=>{keys[e.code]=false;});
+
+function openMenu(){
+  playClickSound();
+  if(!started||finished) return;
+  paused=true; menuOverlay.classList.remove("hidden");
+}
+function closeMenu(){
+  playClickSound();
+  paused=false; menuOverlay.classList.add("hidden");
+}
+
+document.getElementById("menuButton").addEventListener("pointerdown",e=>{e.preventDefault(); openMenu();});
+document.getElementById("resumeButton").addEventListener("pointerdown",e=>{e.preventDefault(); closeMenu();});
+document.getElementById("restartButton").addEventListener("pointerdown",e=>{
+  e.preventDefault(); playClickSound(); menuOverlay.classList.add("hidden"); setupLevel();
+});
+document.getElementById("homeButton").addEventListener("pointerdown",e=>{
+  e.preventDefault(); playClickSound(); paused=false; menuOverlay.classList.add("hidden"); showModeSelection();
+});
+document.getElementById("mainPlayBtn").addEventListener("pointerdown",e=>{e.preventDefault(); showPlayMenu();});
+document.getElementById("skinsMenuBtn").addEventListener("pointerdown",e=>{e.preventDefault(); showSkinsMenu();});
+document.getElementById("guideMenuBtn").addEventListener("pointerdown",e=>{e.preventDefault(); showGuideMenu();});
+document.getElementById("achievementsMenuBtn").addEventListener("pointerdown",e=>{e.preventDefault(); showAchievementsMenu();});
+
+render();
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
